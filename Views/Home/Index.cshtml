@@ -1,0 +1,26 @@
+﻿@model ex3.Models.HomeViewModel
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Ask the AI something below.</p>
+
+    <form asp-action="Index" method="post" class="mt-4">
+        <div class="mb-3">
+            <textarea asp-for="Prompt" class="form-control" rows="5" placeholder="Type your prompt here..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Response))
+    {
+        <div class="mt-4">
+            <h3>Response</h3>
+            <p>@Model.Response</p>
+        </div>
+    }
+</div>
