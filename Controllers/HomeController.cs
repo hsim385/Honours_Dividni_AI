@@ -1,18 +1,20 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using ex3.Models;
-using ex3.Back;
 using System.Threading.Tasks;
+using Honours_Dvidni_AI.Back;
+using Honours_Dvidni_AI.Models;
 
-namespace ex3.Controllers;
+namespace Honours_Dvidni_AI.Controllers;
 
 public class HomeController : Controller
 {
     private readonly IBackend _backend;
+    private readonly IWebHostEnvironment _webHost;
 
-    public HomeController(IBackend backend)
+    public HomeController(IBackend backend, IWebHostEnvironment webHost)
     {
         _backend = backend;
+        _webHost = webHost;
     }
 
 	[HttpGet]
@@ -34,6 +36,27 @@ public class HomeController : Controller
 
 		model.Response = await _backend.AskAI(model.Prompt);
 		return View(model);
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> Privacy(IFormFile file)
+	{
+		string UploadsFolder = Path.Combine(_webHost.WebRootPath, "uploads");
+		if (!Directory.Exists(UploadsFolder))
+		{
+			Directory.CreateDirectory(UploadsFolder);
+		}
+
+		string fileName = Path.GetFileName(file.FileName);
+		string fileSavePath = Path.Combine(UploadsFolder, fileName);
+
+		using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+		{
+			await file.CopyToAsync(stream);
+		}
+		
+		ViewBag.Message = fileName + " uploaded successfully";
+		return View();
 	}
 
     public IActionResult Privacy()
