@@ -17,7 +17,7 @@ public class Backend : IBackend
     {
         _options = options.Value;
         _client = new ResponsesClient(
-            Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+            _options.OpenAiApiKey
         );
     }
     public string test()
