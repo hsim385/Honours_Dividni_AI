@@ -1,4 +1,4 @@
-namespace ex3.Models;
+namespace Honours_Dividni_AI.Models;
 
 public class ErrorViewModel
 {

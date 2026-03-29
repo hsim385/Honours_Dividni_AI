@@ -1,4 +1,4 @@
-﻿@model ex3.Models.HomeViewModel
+﻿@model Honours_Dividni_AI.Models.HomeViewModel
 
 @{
     ViewData["Title"] = "Home Page";
@@ -18,9 +18,21 @@
 
     @if (!string.IsNullOrWhiteSpace(Model.Response))
     {
+        var data = Model.Response.Split("|");
+        var qid = data[0];
+        var qstem = data[1];
+        var correct = data[2];
+        var incorrect = data[3];
         <div class="mt-4">
             <h3>Response</h3>
-            <p>@Model.Response</p>
+            <h4>Question ID</h4>
+            <p>@qid</p>
+            <h4>Stem</h4>
+            <p>@qstem</p>
+            <h4>Correct Answers</h4>
+            <p>@correct</p>
+            <h4>Incorrect Answers</h4>
+            <p>@incorrect</p>
         </div>
     }
 </div>

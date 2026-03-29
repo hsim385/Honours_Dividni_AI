@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using ex3.Back;
-using ex3.Models;
+using Honours_Dividni_AI.Back;
+using Honours_Dividni_AI.Models;
 
-namespace ex3.Controllers;
+namespace Honours_Dividni_AI.Controllers;
 
 public class HomeController : Controller
 {

@@ -1,11 +1,11 @@
-using ex3.Back;
-using ex3.Models;
+using Honours_Dividni_AI.Back;
+using Honours_Dividni_AI.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IBackend, Backend>();
-builder.Services.Configure<OpenAIOptions>(builder.Configuration.GetSection("OpenAI"));
+builder.Services.Configure<AIOptions>(builder.Configuration.GetSection("AISettings"));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

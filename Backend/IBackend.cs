@@ -1,4 +1,4 @@
-﻿namespace ex3.Back;
+﻿namespace Honours_Dividni_AI.Back;
 
 public interface IBackend {
     public abstract string test();
