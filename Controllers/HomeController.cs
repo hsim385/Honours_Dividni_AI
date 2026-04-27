@@ -30,11 +30,33 @@ public class HomeController : Controller
     {
         if (string.IsNullOrWhiteSpace(model.Prompt))
         {
-            model.Response = "Please enter a prompt";
+            model.Response = false;
             return View(model);
         }
+        
+        return RedirectToAction("QuestionMaker", new { prompt = model.Prompt });
+        //
+        // model.Response = await _backend.AskAI(model.Prompt);
+        // return View(model);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> QuestionMaker(string prompt)
+    {
+        // if (string.IsNullOrWhiteSpace(prompt))
+        // {
+        //     model.Response = "Please enter a prompt";
+        //     return View(model);
+        // }
+        var model = new HomeViewModel();
 
-        model.Response = await _backend.AskAI(model.Prompt);
+        if (!string.IsNullOrWhiteSpace(prompt))
+        {
+            model.Prompt = prompt;
+			model.Response = true;
+            model.Question = await _backend.AskAI(prompt);
+        }
+
         return View(model);
     }
 
@@ -61,7 +83,8 @@ public class HomeController : Controller
 
     public IActionResult Privacy()
     {
-        return View();
+        var model = new HomeViewModel();
+        return View(model);
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

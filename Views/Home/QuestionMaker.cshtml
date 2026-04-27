@@ -1,0 +1,47 @@
+﻿@model Honours_Dividni_AI.Models.HomeViewModel
+
+@{
+    ViewData["Title"] = "Question Maker";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Question stem</p>
+
+    <form asp-action="QuestionMaker" method="post" class="mt-4">
+		<h4>Question ID</h4>
+        <div class="mb-3">
+            <textarea asp-for="Question.QID" class="form-control" rows="1" placeholder="Question ID"></textarea>
+        </div>
+		<h4>Stem</h4>
+        <div class="mb-3">
+            <textarea asp-for="Question.QStem" class="form-control" rows="2" placeholder="Question stem"></textarea>
+        </div>
+		<h4>Correct Answers</h4>
+        <div class="mb-3">
+            <textarea asp-for="Question.Correct" class="form-control" rows="7" placeholder="Correct Answers"></textarea>
+        </div>
+		<h4>Incorrect Answers</h4>
+        <div class="mb-3">
+            <textarea asp-for="Question.Incorrect" class="form-control" rows="7" placeholder="Incorrect Answers"></textarea> 
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+
+    @if (!Model.Response)
+    {
+        <div class="mt-4">
+            <h3>Response</h3>
+            <p>Please enter a prompt</p>
+        </div>
+	}
+    else
+    {
+        var qid = Model.Question.QID;
+        var qstem = Model.Question.QStem;
+        var correct = Model.Question.Correct;
+        var incorrect = Model.Question.Incorrect;
+		var qtype = Model.Question.QType;
+    }
+</div>

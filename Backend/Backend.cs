@@ -30,7 +30,7 @@ public class Backend : IBackend
     {
         return "0";
     }
-    public async Task<string> AskAI(string prompt)
+    public async Task<QuestionFields> AskAI(string prompt)
     {
 		// System.Console.WriteLine(_options.Instructions);
 		string fullPrompt = _options.Instructions +
@@ -104,24 +104,26 @@ public class Backend : IBackend
         {
             Directory.CreateDirectory(folderPath);
         }
+        
+        QuestionFields fields = new QuestionFields();
 
         string QID = FindSubstring(trimmedResponse, "q.Id = ", ";");
         
-        string QIDTrimmed = QID.Substring(1, QID.Length - 2);
+        fields.QID = QID.Substring(1, QID.Length - 2);
 
-        var filePath = Path.Combine(folderPath, $"{QIDTrimmed}.cs");
+        var filePath = Path.Combine(folderPath, $"{fields.QID}.cs");
 
         await System.IO.File.WriteAllTextAsync(filePath, trimmedResponse);
         
         string QStem = FindSubstring(trimmedResponse, "q.Stem = ", ";");
         
-        string QStemTrimmed = QStem.Substring(1, QStem.Length - 2);
+        fields.QStem = QStem.Substring(1, QStem.Length - 2);
         
-        string CorrectAnswers = FindSubstring(trimmedResponse, " q.AddCorrects(", ");");
+        fields.Correct = FindSubstring(trimmedResponse, " q.AddCorrects(", ");");
         
-        string IncorrectAnswers = FindSubstring(trimmedResponse, " q.AddIncorrects(", ");");
+        fields.Incorrect = FindSubstring(trimmedResponse, " q.AddIncorrects(", ");");
         
-        return $"{QIDTrimmed}|{QStemTrimmed}|{CorrectAnswers}|{IncorrectAnswers}";
+        return fields;
         
         string RemoveCodeFences(string text)
         {

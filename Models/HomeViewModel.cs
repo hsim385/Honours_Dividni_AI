@@ -3,5 +3,6 @@
 public class HomeViewModel
 {
     public string Prompt { get; set; } = "";
-    public string Response { get; set; } = "";
+    public bool Response { get; set; } = false;
+    public QuestionFields Question { get; set; } = new QuestionFields();
 }

@@ -16,23 +16,33 @@
         <button type="submit" class="btn btn-primary">Send</button>
     </form>
 
-    @if (!string.IsNullOrWhiteSpace(Model.Response))
+   @if (!Model.Response)
     {
-        var data = Model.Response.Split("|");
-        var qid = data[0];
-        var qstem = data[1];
-        var correct = data[2];
-        var incorrect = data[3];
-        <div class="mt-4">
-            <h3>Response</h3>
-            <h4>Question ID</h4>
-            <p>@qid</p>
-            <h4>Stem</h4>
-            <p>@qstem</p>
-            <h4>Correct Answers</h4>
-            <p>@correct</p>
-            <h4>Incorrect Answers</h4>
-            <p>@incorrect</p>
-        </div>
+        if (Model.Response)
+        {
+            <div class="mt-4">
+                <h3>Response</h3>
+                <p>Please enter a prompt</p>
+            </div>
+        }
+        else
+        {
+            var qid = Model.Question.QID;
+            var qstem = Model.Question.QStem;
+            var correct = Model.Question.Correct;
+            var incorrect = Model.Question.Incorrect;
+			var qtype = Model.Question.QType;
+            <div class="mt-4">
+                <h3>Response</h3>
+                <h4>Question ID</h4>
+                <p>@qid</p>
+                <h4>Stem</h4>
+                <p>@qstem</p>
+                <h4>Correct Answers</h4>
+                <p>@correct</p>
+                <h4>Incorrect Answers</h4>
+                <p>@incorrect</p>
+            </div>
+        }
     }
 </div>
