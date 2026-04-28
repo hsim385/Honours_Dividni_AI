@@ -11,6 +11,8 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using Mscc.GenerativeAI;
+using System.Collections.Generic;
+
 
 namespace Honours_Dividni_AI.Back;
 
@@ -96,7 +98,7 @@ public class Backend : IBackend
         
         //Console.WriteLine(response.Text);
         
-        string trimmedResponse = response.Text; //RemoveCodeFences(
+        string trimmedResponse = RemoveCodeFences(response.Text); //RemoveCodeFences(
         
         var folderPath = Path.Combine(_webHost.WebRootPath, "QuestionOutput");
         
@@ -114,16 +116,52 @@ public class Backend : IBackend
         var filePath = Path.Combine(folderPath, $"{fields.QID}.cs");
 
         await System.IO.File.WriteAllTextAsync(filePath, trimmedResponse);
+
+		fields.QType = FindSubstring(trimmedResponse, "var q = new ", "Question(random, isProof);");
         
         string QStem = FindSubstring(trimmedResponse, "q.Stem = ", ";");
         
         fields.QStem = QStem.Substring(1, QStem.Length - 2);
+
+        string correctString = FindSubstring(trimmedResponse, " q.AddCorrects(", ");");
         
-        fields.Correct = FindSubstring(trimmedResponse, " q.AddCorrects(", ");");
+        fields.Correct = processQuestions(correctString).ToList();
+
+		string incorrectString = FindSubstring(trimmedResponse, " q.AddIncorrects(", ");");
         
-        fields.Incorrect = FindSubstring(trimmedResponse, " q.AddIncorrects(", ");");
+        fields.Incorrect = processQuestions(incorrectString).ToList();
         
         return fields;
+
+        string[] processQuestions(string text)
+        {
+            string newText = text.Replace("\t", "").Replace("   ", "");
+
+            string[] textSplit = newText.Split('\n');
+
+            int newLength = 0;
+
+            for (int i = 0; i < textSplit.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(textSplit[i]))
+                {
+                    newLength++;
+                }
+            }
+
+            string[] temp = new String[newLength];
+            int index = 0;
+            
+            for (int i = 0; i < textSplit.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(textSplit[i]))
+                {
+                    temp[index++] = textSplit[i][1..^2];
+                }
+            }
+
+            return temp;
+        }
         
         string RemoveCodeFences(string text)
         {

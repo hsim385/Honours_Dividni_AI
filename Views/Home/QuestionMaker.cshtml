@@ -8,40 +8,180 @@
     <h1 class="display-4">Welcome</h1>
     <p>Question stem</p>
 
-    <form asp-action="QuestionMaker" method="post" class="mt-4">
+    <form asp-action="QuestionMaker" method="post" class="mt-4" name="myForm">
 		<h4>Question ID</h4>
         <div class="mb-3">
-            <textarea asp-for="Question.QID" class="form-control" rows="1" placeholder="Question ID"></textarea>
+            <textarea asp-for="Question.QID" class="form-control auto-resize" rows="1" placeholder="Question ID"></textarea>
+        </div>
+		<div class="mb-3">
+            <input type="radio" asp-for="Question.QType" name="QType" value="Xyz" id="XyzButton"> Xyz
+			<input type="radio" asp-for="Question.QType" name="QType" value="Truth" id="TruthButton"> Truth
         </div>
 		<h4>Stem</h4>
         <div class="mb-3">
-            <textarea asp-for="Question.QStem" class="form-control" rows="2" placeholder="Question stem"></textarea>
+            <textarea asp-for="Question.QStem" class="form-control auto-resize" rows="1" placeholder="Question stem"></textarea>
         </div>
 		<h4>Correct Answers</h4>
-        <div class="mb-3">
-            <textarea asp-for="Question.Correct" class="form-control" rows="7" placeholder="Correct Answers"></textarea>
-        </div>
+		<div id="correctAnswers">
+            @for (int i = 0; i < Model.Question.Correct.Count; i++)
+            {
+                <div class="mb-3">
+                    <textarea name="Question.Correct[@i]" asp-for="Question.Correct[i]" class="form-control" rows="1" placeholder="Correct Answer"></textarea>
+                </div>
+            }
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="addCorrectAnswer()">
+                + Add Correct
+            </button>
+			<button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteCorrectAnswer()">
+                - Remove Correct
+            </button>
+		</div>
 		<h4>Incorrect Answers</h4>
-        <div class="mb-3">
-            <textarea asp-for="Question.Incorrect" class="form-control" rows="7" placeholder="Incorrect Answers"></textarea> 
-        </div>
-
-        <button type="submit" class="btn btn-primary">Save</button>
+		<div id="incorrectAnswers">
+            @for (int i = 0; i < Model.Question.Incorrect.Count; i++)
+            {
+                <div class="mb-3">
+                    <textarea name="Question.Incorrect[@i]" asp-for="Question.Incorrect[i]" class="form-control" rows="1" placeholder="Incorrect Answer"></textarea>
+                </div>
+            }
+			<button type="button" class="btn btn-outline-success btn-sm" onclick="addIncorrectAnswer()">
+                + Add Incorrect
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteIncorrectAnswer()">
+                - Remove Incorrect
+            </button>
+		</div>
+		<button type="submit" class="btn btn-primary">Save</button>
     </form>
-
-    @if (!Model.Response)
-    {
-        <div class="mt-4">
-            <h3>Response</h3>
-            <p>Please enter a prompt</p>
-        </div>
-	}
-    else
-    {
-        var qid = Model.Question.QID;
-        var qstem = Model.Question.QStem;
-        var correct = Model.Question.Correct;
-        var incorrect = Model.Question.Incorrect;
-		var qtype = Model.Question.QType;
-    }
 </div>
+
+<script>
+    function autoResize(textarea) {
+        textarea.style.height = "auto";
+        textarea.style.height = textarea.scrollHeight + "px";
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".auto-resize").forEach(function (textarea) {
+            autoResize(textarea);
+
+            textarea.addEventListener("input", function () {
+                autoResize(textarea);
+            });
+        });
+    });
+
+    let correctIndex = @Model.Question.Correct.Count;
+    let incorrectIndex = @Model.Question.Incorrect.Count;
+
+    function addCorrectAnswer() {
+        const container = document.getElementById("correctAnswers");
+
+        const div = document.createElement("div");
+        div.className = "mb-3";
+
+        div.innerHTML = `<textarea name="Question.Correct[${correctIndex}]"
+                   class="form-control"
+                   placeholder="Correct Answer" 
+                   rows="1"/>`;
+
+        container.appendChild(div);
+        correctIndex++;
+    }
+
+    function addIncorrectAnswer() {
+        const container = document.getElementById("incorrectAnswers");
+
+        const div = document.createElement("div");
+        div.className = "mb-3";
+
+        div.innerHTML = `<textarea name="Question.Incorrect[${incorrectIndex}]"
+                   class="form-control"
+                   placeholder="Incorrect Answer"
+                   rows="1"/>`;
+
+        container.appendChild(div);
+        incorrectIndex++;
+    }
+    
+    function deleteCorrectAnswer() {
+        const form = document.forms['myForm'];
+        const selectedValue = form.elements['QType'].value;
+        if (selectedValue === "Xyz" && correctIndex <= 3) { return; }
+        else if (selectedValue === "Truth" && correctIndex <= 1) { return; }
+        for (let i = correctIndex - 1; 0 < correctIndex; i--) {
+            let textarea = document.querySelector(`textarea[name="Question.Correct[${i}]"]`);
+            if (textarea.value.trim().length === 0){
+                textarea.closest(".mb-3")?.remove();
+                correctIndex--;
+                break;
+            }
+        }
+    }
+
+    function deleteIncorrectAnswer() {
+        const form = document.forms['myForm'];
+        const selectedValue = form.elements['QType'].value;
+        if (selectedValue === "Xyz" && incorrectIndex <= 3) { return; }
+        else if (selectedValue === "Truth" && incorrectIndex <= 4) { return; }
+        for (let i = incorrectIndex - 1; 0 < incorrectIndex; i--) {
+            let textarea = document.querySelector(`textarea[name="Question.Incorrect[${i}]"]`);
+            if (textarea.value.trim().length === 0){
+                textarea.closest(".mb-3")?.remove();
+                incorrectIndex--;
+                break;
+            }
+        }
+    }
+
+    // JavaScript
+    const XyzButton = document.getElementById("XyzButton");
+
+    XyzButton.addEventListener("click", function() {
+        autoPopulate("Xyz");
+    });
+
+    const TruthButton = document.getElementById("TruthButton");
+
+    TruthButton.addEventListener("click", function() {
+        autoPopulate("Truth");
+    });
+    
+    function autoPopulate(button) {
+        let minCorrect = 0;
+        let minIncorrect = 0;
+        
+        if (button === "Xyz") { minCorrect = 3; minIncorrect = 3; }
+        else if (button === "Truth") { minCorrect = 1; minIncorrect = 4; }
+
+        while (correctIndex < minCorrect) {
+            addCorrectAnswer();
+        }
+
+        while (incorrectIndex < minIncorrect) {
+            addIncorrectAnswer();
+        }
+        
+        for (let i = correctIndex - 1; minCorrect < correctIndex; i--) {
+            let textarea = document.querySelector(`textarea[name="Question.Correct[${i}]"]`);
+            if (textarea.value.trim().length === 0){
+                textarea.closest(".mb-3")?.remove();
+                correctIndex--;
+            }
+            else {
+                break;
+            }
+        }
+
+        for (let i = incorrectIndex - 1; minIncorrect < incorrectIndex; i--) {
+            let textarea = document.querySelector(`textarea[name="Question.Incorrect[${i}]"]`);
+            if (textarea.value.trim().length === 0){
+                textarea.closest(".mb-3")?.remove();
+                incorrectIndex--;
+            }
+            else {
+                break;
+            }
+        }
+    }
+</script>

@@ -56,6 +56,11 @@ public class HomeController : Controller
 			model.Response = true;
             model.Question = await _backend.AskAI(prompt);
         }
+		else
+		{
+			model.Prompt = prompt;
+			model.Response = false;
+		}
 
         return View(model);
     }
