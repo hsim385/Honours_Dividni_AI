@@ -100,22 +100,18 @@ public class Backend : IBackend
         
         string trimmedResponse = RemoveCodeFences(response.Text); //RemoveCodeFences(
         
-        var folderPath = Path.Combine(_webHost.WebRootPath, "QuestionOutput");
-        
-        if (!Directory.Exists(folderPath))
-        {
-            Directory.CreateDirectory(folderPath);
-        }
+        // var folderPath = Path.Combine(_webHost.WebRootPath, "QuestionOutput");
+        //
+        // if (!Directory.Exists(folderPath))
+        // {
+        //     Directory.CreateDirectory(folderPath);
+        // }
         
         QuestionFields fields = new QuestionFields();
 
         string QID = FindSubstring(trimmedResponse, "q.Id = ", ";");
         
         fields.QID = QID.Substring(1, QID.Length - 2);
-
-        var filePath = Path.Combine(folderPath, $"{fields.QID}.cs");
-
-        await System.IO.File.WriteAllTextAsync(filePath, trimmedResponse);
 
 		fields.QType = FindSubstring(trimmedResponse, "var q = new ", "Question(random, isProof);");
         
@@ -185,6 +181,58 @@ public class Backend : IBackend
             }
             return "Placeholder";
         }
+    }
+
+    public async Task<bool> saveQuestion(HomeViewModel model)
+    {
+        var folderPath = Path.Combine(_webHost.WebRootPath, "QuestionOutput");
+        
+        if (!Directory.Exists(folderPath))
+        {
+            Directory.CreateDirectory(folderPath);
+        }
+
+        string file = "using System;\n" +
+                "\n" +
+                "namespace Utilities.Courses\n" +
+                "{\n" +
+                "\tpublic partial class QHelper : IQHelper\n" +
+                "\t{\n" +
+                $"\t\tpublic static QuestionBase {model.Question.QID}(Random random, bool isProof)\n" +
+                "\t\t{\n" +
+                $"\t\t\tvar q = new {model.Question.QType}Question(random, isProof);\n" +
+                "\n" +
+                $"\t\t\tq.Id = \"{model.Question.QID}\";\n" +
+                "\n" +
+                "\t\t\tq.Marks = 1;\n" +
+                "\n" +
+                $"\t\t\tq.Stem = \"{model.Question.QStem}\";\n" +
+                "\n" +
+                "\t\t\tq.AddCorrects(\n";
+
+        file += string.Join(",\n",
+            model.Question.Correct.Select(x => $"\t\t\t\t\"{x}\"")
+        ) + "\n";
+        
+        file += "\t\t\t);\n" +
+                "\n" +
+                "\t\t\tq.AddIncorrects(\n";
+        
+        file += string.Join(",\n",
+            model.Question.Incorrect.Select(x => $"\t\t\t\t\"{x}\"")
+        ) + "\n";
+
+        file += "\t\t\t);\n" +
+                "\n" +
+                "\t\t\treturn q;\n" +
+                "\t\t}\n" +
+                "\t}\n" +
+                "}";
+        
+        var filePath = Path.Combine(folderPath, $"{model.Question.QID}.cs");
+
+        await System.IO.File.WriteAllTextAsync(filePath, file);
+        return true;
     }
 }
 

@@ -6,7 +6,6 @@
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <p>Question stem</p>
 
     <form asp-action="QuestionMaker" method="post" class="mt-4" name="myForm">
 		<h4>Question ID</h4>
@@ -14,8 +13,8 @@
             <textarea asp-for="Question.QID" class="form-control auto-resize" rows="1" placeholder="Question ID"></textarea>
         </div>
 		<div class="mb-3">
-            <input type="radio" asp-for="Question.QType" name="QType" value="Xyz" id="XyzButton"> Xyz
-			<input type="radio" asp-for="Question.QType" name="QType" value="Truth" id="TruthButton"> Truth
+            <input type="radio" asp-for="Question.QType" value="Xyz" id="XyzButton"> Xyz
+			<input type="radio" asp-for="Question.QType" value="Truth" id="TruthButton"> Truth
         </div>
 		<h4>Stem</h4>
         <div class="mb-3">
@@ -26,7 +25,7 @@
             @for (int i = 0; i < Model.Question.Correct.Count; i++)
             {
                 <div class="mb-3">
-                    <textarea name="Question.Correct[@i]" asp-for="Question.Correct[i]" class="form-control" rows="1" placeholder="Correct Answer"></textarea>
+                    <textarea asp-for="Question.Correct[i]" class="form-control auto-resize" rows="1" placeholder="Correct Answer"></textarea>
                 </div>
             }
             <button type="button" class="btn btn-outline-success btn-sm" onclick="addCorrectAnswer()">
@@ -41,7 +40,7 @@
             @for (int i = 0; i < Model.Question.Incorrect.Count; i++)
             {
                 <div class="mb-3">
-                    <textarea name="Question.Incorrect[@i]" asp-for="Question.Incorrect[i]" class="form-control" rows="1" placeholder="Incorrect Answer"></textarea>
+                    <textarea asp-for="Question.Incorrect[i]" class="form-control auto-resize" rows="1" placeholder="Incorrect Answer"></textarea>
                 </div>
             }
 			<button type="button" class="btn btn-outline-success btn-sm" onclick="addIncorrectAnswer()">
@@ -81,8 +80,8 @@
         div.className = "mb-3";
 
         div.innerHTML = `<textarea name="Question.Correct[${correctIndex}]"
-                   class="form-control"
-                   placeholder="Correct Answer" 
+                   class="form-control auto-resize"
+                   placeholder="Correct Answer"
                    rows="1"/>`;
 
         container.appendChild(div);
@@ -96,7 +95,7 @@
         div.className = "mb-3";
 
         div.innerHTML = `<textarea name="Question.Incorrect[${incorrectIndex}]"
-                   class="form-control"
+                   class="form-control auto-resize"
                    placeholder="Incorrect Answer"
                    rows="1"/>`;
 
@@ -106,7 +105,7 @@
     
     function deleteCorrectAnswer() {
         const form = document.forms['myForm'];
-        const selectedValue = form.elements['QType'].value;
+        const selectedValue = form.elements['Question.QType'].value;
         if (selectedValue === "Xyz" && correctIndex <= 3) { return; }
         else if (selectedValue === "Truth" && correctIndex <= 1) { return; }
         for (let i = correctIndex - 1; 0 < correctIndex; i--) {
@@ -121,7 +120,7 @@
 
     function deleteIncorrectAnswer() {
         const form = document.forms['myForm'];
-        const selectedValue = form.elements['QType'].value;
+        const selectedValue = form.elements['Question.QType'].value;
         if (selectedValue === "Xyz" && incorrectIndex <= 3) { return; }
         else if (selectedValue === "Truth" && incorrectIndex <= 4) { return; }
         for (let i = incorrectIndex - 1; 0 < incorrectIndex; i--) {
@@ -184,4 +183,12 @@
             }
         }
     }
+
+    const QIDtextarea = document.querySelector(`textarea[name="Question.QID"]`);
+    QIDtextarea.addEventListener('keydown', (e) => {
+        if (e.keyCode === 32) {
+            e.preventDefault();
+            QIDtextarea.value += "_";
+        }
+    });
 </script>

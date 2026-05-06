@@ -65,6 +65,14 @@ public class HomeController : Controller
         return View(model);
     }
 
+	[HttpPost]
+	public async Task<IActionResult> QuestionMaker(HomeViewModel model)
+    {
+		
+		await _backend.saveQuestion(model);
+        return View(model);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Privacy(IFormFile file)
     {
