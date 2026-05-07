@@ -10,22 +10,22 @@
     <form asp-action="QuestionMaker" method="post" class="mt-4" name="myForm">
 		<h4>Question ID</h4>
         <div class="mb-3">
-            <textarea asp-for="Question.QID" class="form-control auto-resize" rows="1" placeholder="Question ID"></textarea>
+            <textarea asp-for="Question.QID" class="form-control auto-resize" rows="1" placeholder="Question ID" data-original="@Model.Question.QID"></textarea>
         </div>
 		<div class="mb-3">
-            <input type="radio" asp-for="Question.QType" value="Xyz" id="XyzButton"> Xyz
-			<input type="radio" asp-for="Question.QType" value="Truth" id="TruthButton"> Truth
+            <input type="radio" asp-for="Question.QType" value="Xyz" id="XyzButton" data-original="@(Model.Question.QType == "Xyz" ? "true" : "false")" > Xyz
+			<input type="radio" asp-for="Question.QType" value="Truth" id="TruthButton" data-original="@(Model.Question.QType == "Truth" ? "true" : "false")"> Truth
         </div>
 		<h4>Stem</h4>
         <div class="mb-3">
-            <textarea asp-for="Question.QStem" class="form-control auto-resize" rows="1" placeholder="Question stem"></textarea>
+            <textarea asp-for="Question.QStem" class="form-control auto-resize" rows="1" placeholder="Question stem" data-original="@Model.Question.QStem"></textarea>
         </div>
 		<h4>Correct Answers</h4>
 		<div id="correctAnswers">
             @for (int i = 0; i < Model.Question.Correct.Count; i++)
             {
                 <div class="mb-3">
-                    <textarea asp-for="Question.Correct[i]" class="form-control auto-resize" rows="1" placeholder="Correct Answer"></textarea>
+                    <textarea asp-for="Question.Correct[i]" class="form-control auto-resize" rows="1" placeholder="Correct Answer" data-original="@Model.Question.Correct[i]"></textarea>
                 </div>
             }
             <button type="button" class="btn btn-outline-success btn-sm" onclick="addCorrectAnswer()">
@@ -40,7 +40,7 @@
             @for (int i = 0; i < Model.Question.Incorrect.Count; i++)
             {
                 <div class="mb-3">
-                    <textarea asp-for="Question.Incorrect[i]" class="form-control auto-resize" rows="1" placeholder="Incorrect Answer"></textarea>
+                    <textarea asp-for="Question.Incorrect[i]" class="form-control auto-resize" rows="1" placeholder="Incorrect Answer" data-original="@Model.Question.Incorrect[i]"></textarea>
                 </div>
             }
 			<button type="button" class="btn btn-outline-success btn-sm" onclick="addIncorrectAnswer()">
@@ -54,11 +54,42 @@
             <input type="radio" asp-for="CompleteQuestion" value="true" id="complete with ai"> Complete with ai
 			<input type="radio" asp-for="CompleteQuestion" value="false" id="don't complete with ai"> Save file
         </div>
+		<input type="hidden" asp-for="AIInvolvement" id="AIInvolvement"/>
 		<button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>
 
 <script>
+    // let defaultQuestion = false;
+    // if (@Model.Question.Correct.Count === 0 && @Model.Question.Incorrect.Count === 0 && @Model.Question.QID === "" && @Model.Question.QStem === "" && @Model.Question.QType === "") {
+    //     defaultQuestion = true;
+    // }
+    //
+    // document.querySelector("form[name='myForm']").addEventListener("submit", function (event) {
+    //     // Stop instant submission
+    //     event.preventDefault();
+    //
+    //     // Do your checks here
+    //     let edited = false;
+    //     document.querySelectorAll("textarea, input[type='radio']").forEach(function (input) {
+    //         if (input.dataset.original !== undefined) {
+    //             if (input.type === "radio") {
+    //                 if (input.checked.toString() !== input.dataset.original) {
+    //                     edited = true;
+    //                 }
+    //             } else {
+    //                 if (input.value !== input.dataset.original) {
+    //                     edited = true;
+    //                 }
+    //             }
+    //         }
+    //     });
+    //
+    //     (document.getElementById("AIInvolvement").value = edited && defaultQuestion === false) ? `${@Model.AIInvolvement} Human edited` : `${@Model.AIInvolvement}`;    
+    //     // Now submit after checks are finished
+    //     this.submit();
+    // });
+    
     function autoResize(textarea) {
         textarea.style.height = "auto";
         textarea.style.height = textarea.scrollHeight + "px";
@@ -86,7 +117,8 @@
         div.innerHTML = `<textarea name="Question.Correct[${correctIndex}]"
                    class="form-control auto-resize"
                    placeholder="Correct Answer"
-                   rows="1"/>`;
+                   rows="1"
+                   data-original=""/>`;
 
         container.appendChild(div);
         correctIndex++;
@@ -101,7 +133,8 @@
         div.innerHTML = `<textarea name="Question.Incorrect[${incorrectIndex}]"
                    class="form-control auto-resize"
                    placeholder="Incorrect Answer"
-                   rows="1"/>`;
+                   rows="1"
+                   data-original=""/>`;
 
         container.appendChild(div);
         incorrectIndex++;

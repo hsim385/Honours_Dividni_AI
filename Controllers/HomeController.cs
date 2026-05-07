@@ -33,7 +33,6 @@ public class HomeController : Controller
             model.Response = false;
             return View(model);
         }
-        
         return RedirectToAction("QuestionMaker", new { prompt = model.Prompt });
         //
         // model.Response = await _backend.AskAI(model.Prompt);
@@ -52,6 +51,7 @@ public class HomeController : Controller
 
         if (!string.IsNullOrWhiteSpace(prompt))
         {
+	        model.AIInvolvement = " AI Created";
             model.Prompt = prompt;
 			model.Response = true;
             model.Question = await _backend.AskAI(prompt);
@@ -71,9 +71,11 @@ public class HomeController : Controller
 		if (model.CompleteQuestion) {
 			await _backend.completeQuestion(model);
 			ModelState.Clear();
+			model.AIInvolvement += " AI Assisted";
 		}
 		else
 		{
+			model.AIInvolvement = (model.AIInvolvement == "") ? "Human Made" : model.AIInvolvement;
 			await _backend.saveQuestion(model);
 		}
         return View(model);

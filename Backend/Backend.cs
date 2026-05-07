@@ -229,8 +229,9 @@ public class Backend : IBackend
                 "\t\t\treturn q;\n" +
                 "\t\t}\n" +
                 "\t}\n" +
-                "}";
-      
+                "}\n" +
+				$"//{model.AIInvolvement}";
+
         var filePath = Path.Combine(folderPath, $"{model.Question.QID}.cs");
 
         await System.IO.File.WriteAllTextAsync(filePath, file);
