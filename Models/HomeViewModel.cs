@@ -3,6 +3,8 @@
 public class HomeViewModel
 {
     public string Prompt { get; set; } = "";
+    public string File { get; set; } = "";
     public bool Response { get; set; } = false;
     public QuestionFields Question { get; set; } = new();
+	public bool CompleteQuestion { get; set; } = false;
 }

@@ -126,6 +126,8 @@ public class Backend : IBackend
 		string incorrectString = FindSubstring(trimmedResponse, " q.AddIncorrects(", ");");
         
         fields.Incorrect = processQuestions(incorrectString).ToList();
+
+//		Console.WriteLine(string.Join("\n", fields.Incorrect));
         
         return fields;
 
@@ -228,12 +230,55 @@ public class Backend : IBackend
                 "\t\t}\n" +
                 "\t}\n" +
                 "}";
-        
+      
         var filePath = Path.Combine(folderPath, $"{model.Question.QID}.cs");
 
         await System.IO.File.WriteAllTextAsync(filePath, file);
         return true;
     }
+
+	public async Task<HomeViewModel> completeQuestion(HomeViewModel model)
+	{
+		string prompt = "This question is partially complete, you will be given the values for the fields and require to make decesions for the remaining fields and return the full C# file for the question. ensure the file respects the requirements given to you. Also note that the way the program is setup, it will always give you the correct number of questions, however it is possible that they will be empty, these empty strigns have been replaced by the phrase \"empty string\" so please replace that phrase whereever you find it in the question field you are expected to fill them.\n";
+		prompt += "Question ID: ";
+		prompt += (string.IsNullOrWhiteSpace(model.Question.QID)) ? "Not Provided\n" : (model.Question.QID + "\n");
+        prompt += "Xyz or Truth: ";
+        prompt += (string.IsNullOrWhiteSpace(model.Question.QType)) ? "Not Specified\n" : (model.Question.QType + "\n");
+		prompt += "Question Stem: ";
+		prompt += (string.IsNullOrWhiteSpace(model.Question.QStem)) ? "Not Provided\n" : (model.Question.QStem + "\n");
+
+        prompt += "Correct Questions: ";
+		if (model.Question.Correct.Count == 0)
+		{
+			prompt += "None Given\n";
+		}
+		else 
+		{
+			prompt += string.Join(",\n",
+                model.Question.Correct.Select(x =>
+        			"\t" + (string.IsNullOrWhiteSpace(x) ? "empty string" : x)
+    			)
+                ) + "\n";
+		}
+
+		prompt += "Incorrect Questions: ";
+		if (model.Question.Incorrect.Count == 0) 
+		{
+			prompt += "None Given";
+		}
+		else 
+		{
+			prompt += string.Join(",\n",
+            	model.Question.Incorrect.Select(x =>
+        			"\t" + (string.IsNullOrWhiteSpace(x) ? "empty string" : x)
+    			)
+        	);
+		}
+        
+		model.Question = await AskAI(prompt);
+        
+        return model;
+	}
 }
 
 // "AISettings": {

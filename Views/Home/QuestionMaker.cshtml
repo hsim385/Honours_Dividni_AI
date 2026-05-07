@@ -50,7 +50,11 @@
                 - Remove Incorrect
             </button>
 		</div>
-		<button type="submit" class="btn btn-primary">Save</button>
+		<div class="mb-3">
+            <input type="radio" asp-for="CompleteQuestion" value="true" id="complete with ai"> Complete with ai
+			<input type="radio" asp-for="CompleteQuestion" value="false" id="don't complete with ai"> Save file
+        </div>
+		<button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>
 

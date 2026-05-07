@@ -68,8 +68,14 @@ public class HomeController : Controller
 	[HttpPost]
 	public async Task<IActionResult> QuestionMaker(HomeViewModel model)
     {
-		
-		await _backend.saveQuestion(model);
+		if (model.CompleteQuestion) {
+			await _backend.completeQuestion(model);
+			ModelState.Clear();
+		}
+		else
+		{
+			await _backend.saveQuestion(model);
+		}
         return View(model);
     }
 
