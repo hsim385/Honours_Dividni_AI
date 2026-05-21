@@ -21,20 +21,20 @@
             <textarea asp-for="Question.QStem" class="form-control auto-resize" rows="1" placeholder="Question stem" data-original="@Model.Question.QStem"></textarea>
         </div>
 		<h4>Correct Answers</h4>
-		<div id="correctAnswers">
+        <div id="correctAnswers">
             @for (int i = 0; i < Model.Question.Correct.Count; i++)
             {
                 <div class="mb-3">
                     <textarea asp-for="Question.Correct[i]" class="form-control auto-resize" rows="1" placeholder="Correct Answer" data-original="@Model.Question.Correct[i]"></textarea>
                 </div>
             }
-            <button type="button" class="btn btn-outline-success btn-sm" onclick="addCorrectAnswer()">
-                + Add Correct
-            </button>
-			<button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteCorrectAnswer()">
-                - Remove Correct
-            </button>
-		</div>
+        </div>
+        <button type="button" class="btn btn-outline-success btn-sm" onclick="addCorrectAnswer()">
+            + Add Correct
+        </button>
+        <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteCorrectAnswer()">
+            - Remove Correct
+        </button>
 		<h4>Incorrect Answers</h4>
 		<div id="incorrectAnswers">
             @for (int i = 0; i < Model.Question.Incorrect.Count; i++)
@@ -43,17 +43,18 @@
                     <textarea asp-for="Question.Incorrect[i]" class="form-control auto-resize" rows="1" placeholder="Incorrect Answer" data-original="@Model.Question.Incorrect[i]"></textarea>
                 </div>
             }
-			<button type="button" class="btn btn-outline-success btn-sm" onclick="addIncorrectAnswer()">
-                + Add Incorrect
-            </button>
-            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteIncorrectAnswer()">
-                - Remove Incorrect
-            </button>
 		</div>
-		<div class="mb-3">
+        <button type="button" class="btn btn-outline-success btn-sm" onclick="addIncorrectAnswer()">
+            + Add Incorrect
+        </button>
+        <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteIncorrectAnswer()">
+            - Remove Incorrect
+        </button>
+        <div class="mb-3">
             <input type="radio" asp-for="CompleteQuestion" value="true" id="complete with ai"> Complete with ai
-			<input type="radio" asp-for="CompleteQuestion" value="false" id="don't complete with ai"> Save file
+            <input type="radio" asp-for="CompleteQuestion" value="false" id="don't complete with ai"> Save file
         </div>
+        <textarea hidden asp-for="Prompt" class="form-control auto-resize" rows="1" placeholder="AI Prompt" data-original="@Model.Prompt" id="Prompt"></textarea>
 		<input type="hidden" asp-for="AIInvolvement" id="AIInvolvement"/>
 		<button type="submit" class="btn btn-primary">Submit</button>
     </form>
@@ -89,7 +90,20 @@
     //     // Now submit after checks are finished
     //     this.submit();
     // });
-    
+
+    const selectedOption = document.querySelector('input[name="CompleteQuestion"]:checked');
+    const prompt = document.getElementById("Prompt");
+
+    document.querySelectorAll('input[name="CompleteQuestion"]').forEach(radio => {
+        radio.addEventListener("change", () => {
+            const selectedOption = document.querySelector('input[name="CompleteQuestion"]:checked');
+            const prompt = document.getElementById("Prompt");
+
+            prompt.hidden = selectedOption.value !== "true";
+        });
+    });
+
+
     function autoResize(textarea) {
         textarea.style.height = "auto";
         textarea.style.height = textarea.scrollHeight + "px";

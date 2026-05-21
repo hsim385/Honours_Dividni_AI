@@ -241,6 +241,8 @@ public class Backend : IBackend
 	public async Task<HomeViewModel> completeQuestion(HomeViewModel model)
 	{
 		string prompt = "This question is partially complete, you will be given the values for the fields and require to make decesions for the remaining fields and return the full C# file for the question. ensure the file respects the requirements given to you. Also note that the way the program is setup, it will always give you the correct number of questions, however it is possible that they will be empty, these empty strigns have been replaced by the phrase \"empty string\" so please replace that phrase whereever you find it in the question field you are expected to fill them.\n";
+		prompt += "The prompt provided with the question was: ";
+		prompt += (string.IsNullOrWhiteSpace(model.Prompt)) ? "Not Provided\n" : (model.Prompt + "\n");
 		prompt += "Question ID: ";
 		prompt += (string.IsNullOrWhiteSpace(model.Question.QID)) ? "Not Provided\n" : (model.Question.QID + "\n");
         prompt += "Xyz or Truth: ";
