@@ -5,27 +5,31 @@ using System;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
-// using Google.GenAI;
-// using Google.GenAI.Types;
+using Google.GenAI;
+using Google.GenAI.Types;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using Mscc.GenerativeAI;
+// using Mscc.GenerativeAI;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text.Json;
+
 
 
 namespace Honours_Dividni_AI.Back;
 
 public class Backend : IBackend
 {
-    private readonly GoogleAI _client;
+    private readonly Client _client;
 	private readonly AIOptions _options;
     private readonly IWebHostEnvironment _webHost;
 
     public Backend(IOptions<AIOptions> options, IWebHostEnvironment webHost)
     {
         _options = options.Value;
-        _client = new GoogleAI(_options.ApiKey);
+        // _client = new GoogleAI(_options.ApiKey);
+        _client = new Client();
         _webHost = webHost;
     }
     public string test()
@@ -84,21 +88,72 @@ public class Backend : IBackend
 //             .GetProperty("text")
 //             .GetString();
 
-        // var response = await _client.Models.GenerateContentAsync(
-        //     model: _options.Model, contents: fullPrompt
-        // );
-        //
-        // var output = response.Candidates[0].Content.Parts[0].Text;
-        //     
-        // Console.WriteLine(output);
 
-        var model = _client.GenerativeModel("gemini-2.5-flash");
+
+
+ProcessStartInfo start = new ProcessStartInfo
+{
+    FileName = "python.exe",
+    Arguments = "Backend\\AIAccess.py",
+    UseShellExecute = false,
+    RedirectStandardInput = true,
+    RedirectStandardOutput = true,
+    RedirectStandardError = true,
+    CreateNoWindow = true
+};
+
+string filename = "Week2.1 latent_diffusion_model.pdf";
+var payload = new
+{
+  filename = filename,
+  prompt = fullPrompt + "Here is a pdf of lecture slides, try and make the question from information present here"
+};
+string json = JsonSerializer.Serialize(payload);
+
+using (Process process = Process.Start(start))
+{
+    // Send JSON to Python
+    using (StreamWriter writer = process.StandardInput)
+    {
+        writer.Write(json);
+    }
+
+    // Read Python output
+    using (StreamReader reader = process.StandardOutput)
+    {
+        string result = reader.ReadToEnd();
+        Console.WriteLine(result);
+    }
+
+    // Read errors
+    using (StreamReader errorReader = process.StandardError)
+    {
+        string errors = errorReader.ReadToEnd();
+
+        if (!string.IsNullOrWhiteSpace(errors))
+        {
+            Console.WriteLine(errors);
+        }
+    }
+
+    process.WaitForExit();
+}
+
+        var response = await _client.Models.GenerateContentAsync(
+            model: _options.Model, contents: fullPrompt
+        );
         
-        var response = await model.GenerateContent(fullPrompt);
+        var output = response.Candidates[0].Content.Parts[0].Text;
+            
+        Console.WriteLine(output);
+
+        // var model = _client.GenerativeModel("gemini-2.5-flash");
+        //
+        // var response = await model.GenerateContent(fullPrompt);
         
         //Console.WriteLine(response.Text);
         
-        string trimmedResponse = RemoveCodeFences(response.Text); //RemoveCodeFences(
+        string trimmedResponse = RemoveCodeFences(response.Text); 
         
         // var folderPath = Path.Combine(_webHost.WebRootPath, "QuestionOutput");
         //
@@ -283,9 +338,3 @@ public class Backend : IBackend
         return model;
 	}
 }
-
-// "AISettings": {
-//     "Model": "gpt-5.4",
-//     "Instructions": "You are an assistant that helps generate Dividni multiple-choice questions in C#.\nUse upper or intermediate levels of Bloom's taxonomy.\n\nDividni supports two question types:\n\nTruthQuestion\n- At least 1 correct answer (Dividni will randomly select ONE correct answer at runtime)\n- At least 4 incorrect answers (distractors)\n- Prefer to include more than the minimum number of correct and incorrect answers when appropriate\n\nXyzQuestion\n- At least 3 correct answers\n- At least 3 incorrect answers (distractors)\n- Prefer to include more than the minimum number of correct and incorrect answers when appropriate\n\nEvery question must:\n- Be implemented as a complete C# method\n- Return QuestionBase\n- Accept parameters (Random random, bool isProof)\n- Instantiate either TruthQuestion or XyzQuestion\n- Set a meaningful, unique Id\n- Define a clear, unambiguous Stem\n- Populate answers using AddCorrects(...) and AddIncorrects(...)\n\nFollow the exact coding style, structure, and conventions shown in the template below.\n\nAdditional requirements:\n- Ensure all minimum answer counts are satisfied\n- Prefer clarity over cleverness\n- Avoid ambiguity or unintended additional correct answers\n- Distractors must be plausible and relevant\n\nUnless explicitly specified, choose the most appropriate question type.\n\nDIVIDNI QUESTION TEMPLATE\n-------------------------\nusing System;\n\nnamespace Utilities.Courses\n{\n   public partial class QHelper : IQHelper\n   {\n      // ============================================================\n      // TEMPLATE: Dividni Question Generator\n      // ============================================================\n      // Replace the placeholders marked with TODO.\n      // Choose either TruthQuestion or XyzQuestion as appropriate.\n      //\n      // TruthQuestion requirements:\n      //   - At least 1 correct answer (one will be chosen at runtime) – prefer to have more\n      //   - At least 4 incorrect answers - prefer to have more\n      //\n      // XyzQuestion requirements:\n      //   - At least 3 correct answers - prefer to have more\n      //   - At least 3 incorrect answers - prefer to have more\n      // ============================================================\n\n      public static QuestionBase TODO_MethodName(Random random, bool isProof)\n      {\n         // TODO: Choose question type:\n         // var q = new TruthQuestion(random, isProof);\n         // OR\n         // var q = new XyzQuestion(random, isProof);\n\n         var q = new TruthQuestion(random, isProof); // TODO: change if needed\n\n         // TODO: Set a meaningful, unique Id\n         q.Id = \"TODO_UniqueQuestionId\";\n\n         q.Marks = 1;\n\n         // TODO: Define any randomized values here\n         // int value = random.Next(...);\n\n         // TODO: Write the question stem\n         q.Stem = \"TODO: Write the question stem here.\";\n\n         // TODO: Add correct answers\n         // NOTE: For TruthQuestion, Dividni will randomly select ONE\n         // of the correct answers at runtime.\n         q.AddCorrects(\n             \"TODO_CorrectAnswer1\"\n             // Add more as desired\n         );\n\n         // TODO: Add incorrect answers (distractors)\n         q.AddIncorrects(\n             \"TODO_Incorrect1\",\n             \"TODO_Incorrect2\",\n             \"TODO_Incorrect3\",\n             \"TODO_Incorrect4\"\n             // Add more as desired\n         );\n\n         return q;\n      } // TODO_MethodName\n   } // class\n} // namespace",
-//     "ApiKey": "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"
-//   }
