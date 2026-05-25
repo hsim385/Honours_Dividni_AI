@@ -10,7 +10,6 @@ using Google.GenAI.Types;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-// using Mscc.GenerativeAI;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json;
@@ -109,7 +108,7 @@ var payload = new
   prompt = fullPrompt + "Here is a pdf of lecture slides, try and make the question from information present here"
 };
 string json = JsonSerializer.Serialize(payload);
-
+string output = "";
 using (Process process = Process.Start(start))
 {
     // Send JSON to Python
@@ -121,8 +120,7 @@ using (Process process = Process.Start(start))
     // Read Python output
     using (StreamReader reader = process.StandardOutput)
     {
-        string result = reader.ReadToEnd();
-        Console.WriteLine(result);
+        output = reader.ReadToEnd();
     }
 
     // Read errors
@@ -139,11 +137,11 @@ using (Process process = Process.Start(start))
     process.WaitForExit();
 }
 
-        var response = await _client.Models.GenerateContentAsync(
-            model: _options.Model, contents: fullPrompt
-        );
+       // var response = await _client.Models.GenerateContentAsync(
+        //    model: _options.Model, contents: fullPrompt
+        //);
         
-        var output = response.Candidates[0].Content.Parts[0].Text;
+       // var output = response.Candidates[0].Content.Parts[0].Text;
             
         Console.WriteLine(output);
 
@@ -153,7 +151,7 @@ using (Process process = Process.Start(start))
         
         //Console.WriteLine(response.Text);
         
-        string trimmedResponse = RemoveCodeFences(response.Text); 
+        string trimmedResponse = RemoveCodeFences(output); 
         
         // var folderPath = Path.Combine(_webHost.WebRootPath, "QuestionOutput");
         //
