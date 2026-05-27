@@ -1,0 +1,37 @@
+﻿@using System.IO;
+
+@{
+    ViewData["Title"] = "Remove File";
+    var dir = System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"wwwroot\uploads");
+    if (!Directory.Exists(dir))
+    {
+        Directory.CreateDirectory(dir);
+    }
+    var files = Directory.GetFiles(dir);
+    int length = files.Length;
+    string[] filenames = new String[length];
+    foreach (var path in files)
+    {
+        filenames[--length] = System.IO.Path.GetFileName(path);
+    }
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <form asp-action="RemoveFiles" method="post" class="mt-4">
+        <label for="File">Choose a File:</label>
+        <select name="File" id="fileselect">
+            @foreach (var file in filenames)
+            {
+                <option value="@file">@file</option>
+            }
+        </select>
+
+        <div class="mb-3">
+            <input type="submit" value="delete File" class="btn btn-primary"/>
+        </div>
+        <span class="text-success">
+            @ViewBag.Message
+        </span>
+    </form>
+</div>

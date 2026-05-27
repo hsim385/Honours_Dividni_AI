@@ -104,8 +104,27 @@ public class HomeController : Controller
 
     public IActionResult Privacy()
     {
-        var model = new HomeViewModel();
-        return View(model);
+        return View();
+    }
+
+	public IActionResult RemoveFiles()
+    {
+        return View();
+    }
+
+	[HttpPost]
+	public async Task<IActionResult> RemoveFiles(string File)
+    {
+		bool success = await _backend.DeleteFile(File);
+		if (success) 
+		{
+			ViewBag.Message = $"{File} deleted.";
+		}
+		else
+		{
+			ViewBag.Message = "File not found.";
+		}
+        return View();
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

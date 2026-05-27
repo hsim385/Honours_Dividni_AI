@@ -7,4 +7,5 @@ public interface IBackend {
     public Task<QuestionFields> AskAI(string prompt);
     public Task<bool> saveQuestion(HomeViewModel model);
     public Task<HomeViewModel> completeQuestion(HomeViewModel model);
+	public Task<bool> DeleteFile(string File);
 }

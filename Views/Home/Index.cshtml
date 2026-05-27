@@ -1,7 +1,20 @@
 ﻿@model Honours_Dividni_AI.Models.HomeViewModel
+@using System.IO;
 
 @{
     ViewData["Title"] = "Home Page";
+    var dir = System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"wwwroot\uploads");
+    if (!Directory.Exists(dir))
+    {
+        Directory.CreateDirectory(dir);
+    }
+    var files = Directory.GetFiles(dir);
+    int length = files.Length;
+    string[] filenames = new String[length];
+    foreach (var path in files)
+    {
+        filenames[--length] = System.IO.Path.GetFileName(path);
+    }
 }
 
 <div class="text-center">
@@ -12,11 +25,13 @@
         <div class="mb-3">
             <textarea asp-for="Prompt" class="form-control" rows="5" placeholder="Type your prompt here..."></textarea>
         </div>
-<!--
-        <div class="mb-3">
-            <textarea asp-for="File" class="form-control" rows="1" placeholder="Type your filename here..."></textarea>
-        </div>
--->
+        <label for="File">Choose a File:</label>
+        <select asp-for="File" id="fileselect">
+            @foreach (var file in filenames)
+            {
+                <option value="@file">@file</option>
+            }
+        </select>
 
         <button type="submit" class="btn btn-primary">Send</button>
     </form>

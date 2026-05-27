@@ -335,4 +335,18 @@ using (Process process = Process.Start(start))
         
         return model;
 	}
+
+	public async Task<bool> DeleteFile(string File)
+	{
+    	string path = System.IO.Path.Combine(Directory.GetCurrentDirectory(), @"wwwroot\uploads", File);
+	if (System.IO.File.Exists(path))
+    {
+        System.IO.File.Delete(path);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+	}
 }
