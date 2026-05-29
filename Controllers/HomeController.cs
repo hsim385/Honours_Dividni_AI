@@ -33,14 +33,14 @@ public class HomeController : Controller
             model.Response = false;
             return View(model);
         }
-        return RedirectToAction("QuestionMaker", new { prompt = model.Prompt });
+        return RedirectToAction("QuestionMaker", new { prompt = model.Prompt, file = model.File});
         //
         // model.Response = await _backend.AskAI(model.Prompt);
         // return View(model);
     }
     
     [HttpGet]
-    public async Task<IActionResult> QuestionMaker(string prompt)
+    public async Task<IActionResult> QuestionMaker(string prompt, string file)
     {
         // if (string.IsNullOrWhiteSpace(prompt))
         // {
@@ -54,7 +54,8 @@ public class HomeController : Controller
 	        model.AIInvolvement = " AI Created";
             model.Prompt = prompt;
 			model.Response = true;
-            model.Question = await _backend.AskAI(prompt);
+			model.File = file;
+            model.Question = await _backend.AskAI(prompt, file);
         }
 		else
 		{

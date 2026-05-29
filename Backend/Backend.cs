@@ -35,7 +35,7 @@ public class Backend : IBackend
     {
         return "0";
     }
-    public async Task<QuestionFields> AskAI(string prompt)
+    public async Task<QuestionFields> AskAI(string prompt, string filename)
     {
 		// System.Console.WriteLine(_options.Instructions);
 		string fullPrompt = _options.Instructions +
@@ -90,52 +90,42 @@ public class Backend : IBackend
 
 
 
-ProcessStartInfo start = new ProcessStartInfo
-{
-    FileName = "python.exe",
-    Arguments = "Backend\\AIAccess.py",
-    UseShellExecute = false,
-    RedirectStandardInput = true,
-    RedirectStandardOutput = true,
-    RedirectStandardError = true,
-    CreateNoWindow = true
-};
-
-string filename = "Week2.1 latent_diffusion_model.pdf";
-var payload = new
-{
-  filename = filename,
-  prompt = fullPrompt + "Here is a pdf of lecture slides, try and make the question from information present here"
-};
-string json = JsonSerializer.Serialize(payload);
-string output = "";
-using (Process process = Process.Start(start))
-{
-    // Send JSON to Python
-    using (StreamWriter writer = process.StandardInput)
-    {
-        writer.Write(json);
-    }
-
-    // Read Python output
-    using (StreamReader reader = process.StandardOutput)
-    {
-        output = reader.ReadToEnd();
-    }
-
-    // Read errors
-    using (StreamReader errorReader = process.StandardError)
-    {
-        string errors = errorReader.ReadToEnd();
-
-        if (!string.IsNullOrWhiteSpace(errors))
+        ProcessStartInfo start = new ProcessStartInfo
         {
-            Console.WriteLine(errors);
-        }
-    }
+            FileName = "python.exe",
+            Arguments = "Backend\\AIAccess.py",
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
 
-    process.WaitForExit();
-}
+        var payload = new
+        {
+          filename = filename,
+          prompt = fullPrompt + "Here is a pdf of lecture slides, try and make the question from information present here"
+        };
+        string json = JsonSerializer.Serialize(payload);
+        string output = "";
+        using (Process process = Process.Start(start))
+        {
+            // Send JSON to Python
+            await process.StandardInput.WriteAsync(json);
+            process.StandardInput.Close();
+
+            // Read Python output
+            Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> errorTask = process.StandardError.ReadToEndAsync();
+
+            await process.WaitForExitAsync();
+            output = await outputTask;
+            string errors = await errorTask;
+            if (!string.IsNullOrWhiteSpace(errors))
+            {
+	            Console.WriteLine(errors);
+            }
+        }
 
        // var response = await _client.Models.GenerateContentAsync(
         //    model: _options.Model, contents: fullPrompt
