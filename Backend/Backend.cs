@@ -154,13 +154,13 @@ public class Backend : IBackend
 
         string QID = FindSubstring(trimmedResponse, "q.Id = ", ";");
         
-        fields.QID = QID.Substring(1, QID.Length - 2);
+        fields.QID = (QID[0] == '$') ? QID = QID.Substring(2, QID.Length - 2) : QID.Substring(1, QID.Length - 2);
 
 		fields.QType = FindSubstring(trimmedResponse, "var q = new ", "Question(random, isProof);");
         
         string QStem = FindSubstring(trimmedResponse, "q.Stem = ", ";");
         
-        fields.QStem = QStem.Substring(1, QStem.Length - 2);
+        fields.QStem = (QStem[0] == '$') ? QStem = QStem.Substring(2, QStem.Length - 2) : QStem.Substring(1, QStem.Length - 2);
 
         string correctString = FindSubstring(trimmedResponse, " q.AddCorrects(", ");");
         
@@ -193,11 +193,29 @@ public class Backend : IBackend
             string[] temp = new String[newLength];
             int index = 0;
             
-            for (int i = 0; i < textSplit.Length; i++)
+            for (int i = 0; i < textSplit.Length - 1; i++)
             {
                 if (!string.IsNullOrWhiteSpace(textSplit[i]))
                 {
-                    temp[index++] = textSplit[i][1..^2];
+					Regex.Replace(text, @"//.*", "");
+					if (temp[index][0] == '$'){
+						temp[index] = textSplit[i][2..];
+					}
+					else{
+                    	temp[index] = textSplit[i][1..];
+					} 
+					for (int j = temp[index].Length; j > 0; j--)
+					{
+						if (temp[index][j] is '"' or ' ' or ',' or '\t')
+						{
+							temp[index] = temp[index][..^1];
+						}
+						else
+						{
+							break;
+						}
+					}
+				
                 }
             }
 

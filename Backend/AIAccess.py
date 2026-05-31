@@ -57,12 +57,14 @@ async def main():
                         if file.endswith(".pdf"):
                             files.append(os.path.join(r, file))
                 fileIDs = await uploadfiles(files)
-                content = [prompt] + fileIDs
+                content = fileIDs + [prompt]
                 response = await getresponse(content)
             
         else:
             myfile = await uploadfiles([filepath])
-            response = await getresponse([prompt, myfile])
+            print(myfile)
+            content = myfile + [prompt]
+            response = await getresponse(content)
         print(response.text)
 
 asyncio.run(main())
