@@ -8,19 +8,19 @@
     <h1 class="display-4">Welcome</h1>
 
     <form asp-action="QuestionMaker" method="post" class="mt-4" name="myForm">
-		<h4>Question ID</h4>
+        <h4>Question ID</h4>
         <div class="mb-3">
             <textarea asp-for="Question.QID" class="form-control auto-resize" rows="1" placeholder="Question ID" data-original="@Model.Question.QID"></textarea>
         </div>
-		<div class="mb-3">
+        <div class="mb-3">
             <input type="radio" asp-for="Question.QType" value="Xyz" id="XyzButton" data-original="@(Model.Question.QType == "Xyz" ? "true" : "false")" > Xyz
-			<input type="radio" asp-for="Question.QType" value="Truth" id="TruthButton" data-original="@(Model.Question.QType == "Truth" ? "true" : "false")"> Truth
+            <input type="radio" asp-for="Question.QType" value="Truth" id="TruthButton" data-original="@(Model.Question.QType == "Truth" ? "true" : "false")"> Truth
         </div>
-		<h4>Stem</h4>
+        <h4>Stem</h4>
         <div class="mb-3">
             <textarea asp-for="Question.QStem" class="form-control auto-resize" rows="1" placeholder="Question stem" data-original="@Model.Question.QStem"></textarea>
         </div>
-		<h4>Correct Answers</h4>
+        <h4>Correct Answers</h4>
         <div id="correctAnswers">
             @for (int i = 0; i < Model.Question.Correct.Count; i++)
             {
@@ -35,15 +35,15 @@
         <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteCorrectAnswer()">
             - Remove Correct
         </button>
-		<h4>Incorrect Answers</h4>
-		<div id="incorrectAnswers">
+        <h4>Incorrect Answers</h4>
+        <div id="incorrectAnswers">
             @for (int i = 0; i < Model.Question.Incorrect.Count; i++)
             {
                 <div class="mb-3">
                     <textarea asp-for="Question.Incorrect[i]" class="form-control auto-resize" rows="1" placeholder="Incorrect Answer" data-original="@Model.Question.Incorrect[i]"></textarea>
                 </div>
             }
-		</div>
+        </div>
         <button type="button" class="btn btn-outline-success btn-sm" onclick="addIncorrectAnswer()">
             + Add Incorrect
         </button>
@@ -55,12 +55,17 @@
             <input type="radio" asp-for="CompleteQuestion" value="false" id="don't complete with ai"> Save file
         </div>
         <textarea hidden asp-for="Prompt" class="form-control auto-resize" rows="1" placeholder="AI Prompt" data-original="@Model.Prompt" id="Prompt"></textarea>
-		<input type="hidden" asp-for="AIInvolvement" id="AIInvolvement"/>
-		<button type="submit" class="btn btn-primary">Submit</button>
+        <input type="hidden" asp-for="AIInvolvement" id="AIInvolvement"/>
+        <button type="submit" class="btn btn-primary">Submit</button>
     </form>
+    
+    <pre id="json" style="text-align: left"></pre>
 </div>
 
 <script>
+
+    const form = document.forms['myForm'];
+
     // let defaultQuestion = false;
     // if (@Model.Question.Correct.Count === 0 && @Model.Question.Incorrect.Count === 0 && @Model.Question.QID === "" && @Model.Question.QStem === "" && @Model.Question.QType === "") {
     //     defaultQuestion = true;
@@ -90,6 +95,29 @@
     //     // Now submit after checks are finished
     //     this.submit();
     // });
+    
+    var json;
+    setInterval(() => {
+        json = {
+            "Name": document.getElementById("Question_QStem").value,
+            "Type": form.elements['Question.QType'].value,
+            "Id": document.getElementById("Question_QID").value,
+            "Marks": 1,
+            "Stem": document.getElementById("Question_QStem").value,
+            "Corrects": Array.from(
+                document.querySelectorAll(
+                    '#correctAnswers textarea'
+                )
+            ).map(textarea => textarea.value),
+            "Incorrects": Array.from(
+                document.querySelectorAll(
+                    '#incorrectAnswers textarea'
+                )
+            ).map(textarea => textarea.value)
+        };
+        document.getElementById("json").textContent =  JSON.stringify(json, null, 2);
+    }, 1000);
+    
 
     const selectedOption = document.querySelector('input[name="CompleteQuestion"]:checked');
     const prompt = document.getElementById("Prompt");
@@ -155,7 +183,6 @@
     }
     
     function deleteCorrectAnswer() {
-        const form = document.forms['myForm'];
         const selectedValue = form.elements['Question.QType'].value;
         if (selectedValue === "Xyz" && correctIndex <= 3) { return; }
         else if (selectedValue === "Truth" && correctIndex <= 1) { return; }
@@ -170,7 +197,6 @@
     }
 
     function deleteIncorrectAnswer() {
-        const form = document.forms['myForm'];
         const selectedValue = form.elements['Question.QType'].value;
         if (selectedValue === "Xyz" && incorrectIndex <= 3) { return; }
         else if (selectedValue === "Truth" && incorrectIndex <= 4) { return; }

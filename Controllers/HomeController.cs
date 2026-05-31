@@ -83,6 +83,8 @@ public class HomeController : Controller
     }
 
     [HttpPost]
+    [RequestSizeLimit(200_000_000)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 200_000_000)]
     public async Task<IActionResult> Privacy(IFormFile file)
     {
         string UploadsFolder = Path.Combine(_webHost.WebRootPath, "uploads");

@@ -12,8 +12,6 @@ using System.Text;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text.Json;
-
 
 
 namespace Honours_Dividni_AI.Back;
@@ -110,6 +108,8 @@ public class Backend : IBackend
         string output = "";
         using (Process process = Process.Start(start))
         {
+			start.StandardOutputEncoding = Encoding.UTF8;
+			start.StandardErrorEncoding = Encoding.UTF8;
             // Send JSON to Python
             await process.StandardInput.WriteAsync(json);
             process.StandardInput.Close();
@@ -321,7 +321,7 @@ public class Backend : IBackend
         	);
 		}
         
-		model.Question = await AskAI(prompt);
+		model.Question = await AskAI(prompt, model.File);
         
         return model;
 	}
