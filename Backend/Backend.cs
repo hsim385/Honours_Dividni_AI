@@ -33,15 +33,21 @@ public class Backend : IBackend
     {
         return "0";
     }
-    public async Task<QuestionFields> AskAI(string prompt, string filename)
+    public async Task<string> AskAI(string prompt, string filename)
     {
+
+		var filePath = Path.Combine(_webHost.WebRootPath, "..", "Backend", "Dividni_MegaPrompt.txt");
+
+		string text = System.IO.File.ReadAllText(filePath);
+
 		// System.Console.WriteLine(_options.Instructions);
-		string fullPrompt = _options.Instructions +
+		string fullPrompt = text +
                             "Using the Dividni template, create a new question with these instructions:\n" +
-        "\n" +
-        "\n" +
-        "Generate a complete C# method, filling in the template appropriately and following all Dividni rules.\n" +
-        $"Make a question about {prompt}";
+        					"\n" +
+        					"\n" +
+        					"Generate a complete C# method, filling in the template appropriately and following all Dividni rules.\n" +
+        					"The client requested one question with the following prompt:\n" +
+							prompt;
         
         //Console.WriteLine(fullPrompt);
         
@@ -102,7 +108,7 @@ public class Backend : IBackend
         var payload = new
         {
           filename = filename,
-          prompt = fullPrompt + "Here is a pdf of lecture slides, try and make the question from information present here"
+          prompt = fullPrompt
         };
         string json = JsonSerializer.Serialize(payload);
         string output = "";
@@ -133,15 +139,21 @@ public class Backend : IBackend
         
        // var output = response.Candidates[0].Content.Parts[0].Text;
             
-        Console.WriteLine(output);
+        
 
         // var model = _client.GenerativeModel("gemini-2.5-flash");
         //
         // var response = await model.GenerateContent(fullPrompt);
         
         //Console.WriteLine(response.Text);
+
+		Console.WriteLine(output);
+        return output;
         
-        string trimmedResponse = RemoveCodeFences(output); 
+    }
+
+	public async Task<QuestionFields> cSharpToJson(string cSharp){
+		string trimmedResponse = RemoveCodeFences(cSharp); 
         
         // var folderPath = Path.Combine(_webHost.WebRootPath, "QuestionOutput");
         //
@@ -197,24 +209,15 @@ public class Backend : IBackend
             {
                 if (!string.IsNullOrWhiteSpace(textSplit[i]))
                 {
-					Regex.Replace(text, @"//.*", "");
+					temp[index] = Regex.Replace(textSplit[i], @"//.*", "");
 					if (temp[index][0] == '$'){
 						temp[index] = textSplit[i][2..];
 					}
 					else{
                     	temp[index] = textSplit[i][1..];
 					} 
-					for (int j = temp[index].Length; j > 0; j--)
-					{
-						if (temp[index][j] is '"' or ' ' or ',' or '\t')
-						{
-							temp[index] = temp[index][..^1];
-						}
-						else
-						{
-							break;
-						}
-					}
+					temp[index] = temp[index].TrimEnd('"', ' ', ',', '\t', '\r');
+					index++;
 				
                 }
             }
@@ -244,7 +247,7 @@ public class Backend : IBackend
             }
             return "Placeholder";
         }
-    }
+	}
 
     public async Task<bool> saveQuestion(HomeViewModel model)
     {
@@ -339,7 +342,7 @@ public class Backend : IBackend
         	);
 		}
         
-		model.Question = await AskAI(prompt, model.File);
+		model.Question = await cSharpToJson(await AskAI(prompt, model.File));
         
         return model;
 	}

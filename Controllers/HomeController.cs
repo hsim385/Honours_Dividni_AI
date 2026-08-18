@@ -38,6 +38,30 @@ public class HomeController : Controller
         // model.Response = await _backend.AskAI(model.Prompt);
         // return View(model);
     }
+
+    [HttpPost("/api/prompt")]
+    public async Task<IActionResult> IndexAPI([FromBody] PromptRequest model)
+    {
+        if (string.IsNullOrWhiteSpace(model.Prompt))
+        {
+            return BadRequest("Invalid prompt");
+        }
+
+        string file = await _backend.AskAI(model.Prompt, model.File);
+
+		byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(file);
+
+        return File(
+        	fileBytes,
+        	"text/plain",
+        	"GeneratedCode.cs"
+    	);
+        //
+        // model.Response = await _backend.AskAI(model.Prompt);
+        // return View(model);
+	
+		
+    }
     
     [HttpGet]
     public async Task<IActionResult> QuestionMaker(string prompt, string file)
@@ -55,7 +79,7 @@ public class HomeController : Controller
             model.Prompt = prompt;
 			model.Response = true;
 			model.File = file;
-            model.Question = await _backend.AskAI(prompt, file);
+            model.Question = await _backend.cSharpToJson(await _backend.AskAI(prompt, file));
         }
 		else
 		{
