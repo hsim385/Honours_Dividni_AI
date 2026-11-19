@@ -33,38 +33,64 @@ public class HomeController : Controller
             model.Response = false;
             return View(model);
         }
-        return RedirectToAction("QuestionMaker", new { prompt = model.Prompt, file = model.File});
+        return RedirectToAction("QuestionMaker", new { prompt = model.Prompt, file = model.File, AIModel = model.AIModel });
         //
         // model.Response = await _backend.AskAI(model.Prompt);
         // return View(model);
     }
 
-    [HttpPost("/api/prompt")]
-    public async Task<IActionResult> IndexAPI([FromBody] PromptRequest model)
+    [HttpPost("/api/upload")]
+    public async Task<IActionResult> UploadAPI([FromForm] IFormFile file)
     {
-        if (string.IsNullOrWhiteSpace(model.Prompt))
-        {
-            return BadRequest("Invalid prompt");
-        }
+	    if (file == null || file.Length == 0)
+	    {
+		    return BadRequest("No file was provided.");
+	    }
+	    string UploadsFolder = Path.Combine(_webHost.WebRootPath, "uploads");
+	    if (!Directory.Exists(UploadsFolder))
+	    {
+		    Directory.CreateDirectory(UploadsFolder);
+	    }
 
-        string file = await _backend.AskAI(model.Prompt, model.File);
+	    string fileName = Path.GetFileName(file.FileName);
+	    string fileSavePath = Path.Combine(UploadsFolder, fileName);
+
+	    await using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+	    {
+		    await file.CopyToAsync(stream);
+	    }
+	    
+	    return Ok(new
+	    {
+		    fileName = fileName,
+		    message = $"{fileName} uploaded successfully"
+	    });
+    }
+
+	[HttpPost("/api/prompt")]
+	public async Task<IActionResult> IndexAPI([FromBody] PromptRequest model)
+	{
+		if (string.IsNullOrWhiteSpace(model.Prompt))
+		{
+			return BadRequest("Invalid prompt");
+		}
+
+		string file = await _backend.AskAI(model.Prompt, model.File, model.AIModel);
 
 		byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(file);
 
-        return File(
-        	fileBytes,
-        	"text/plain",
-        	"GeneratedCode.cs"
-    	);
-        //
-        // model.Response = await _backend.AskAI(model.Prompt);
-        // return View(model);
+		return File(
+			fileBytes,
+			"text/plain",
+			"GeneratedCode.cs"
+		);
+		//
+		// model.Response = await _backend.AskAI(model.Prompt);
+		// return View(model);
+	}
 	
-		
-    }
-    
     [HttpGet]
-    public async Task<IActionResult> QuestionMaker(string prompt, string file)
+    public async Task<IActionResult> QuestionMaker(string prompt, string file, string AIModel)
     {
         // if (string.IsNullOrWhiteSpace(prompt))
         // {
@@ -79,7 +105,8 @@ public class HomeController : Controller
             model.Prompt = prompt;
 			model.Response = true;
 			model.File = file;
-            model.Question = await _backend.cSharpToJson(await _backend.AskAI(prompt, file));
+			model.AIModel = AIModel;
+            model.Question = await _backend.cSharpToJson(await _backend.AskAI(prompt, file, AIModel));
         }
 		else
 		{
@@ -143,7 +170,7 @@ public class HomeController : Controller
 	public async Task<IActionResult> RemoveFiles(string File)
     {
 		bool success = await _backend.DeleteFile(File);
-		if (success) 
+		if (success)
 		{
 			ViewBag.Message = $"{File} deleted.";
 		}

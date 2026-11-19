@@ -33,7 +33,7 @@ public class Backend : IBackend
     {
         return "0";
     }
-    public async Task<string> AskAI(string prompt, string filename)
+    public async Task<string> AskAI(string prompt, string filename, string AIModel)
     {
 
 		var filePath = Path.Combine(_webHost.WebRootPath, "..", "Backend", "Dividni_MegaPrompt.txt");
@@ -94,61 +94,101 @@ public class Backend : IBackend
 
 
 
-        ProcessStartInfo start = new ProcessStartInfo
-        {
-            FileName = "python.exe",
-            Arguments = "Backend\\AIAccess.py",
-            UseShellExecute = false,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
+        // Locate Python script using an absolute path
+		string scriptPath = Path.Combine(
+		    _webHost.ContentRootPath,
+		    "Backend",
+		    "AIAccess.py"
+		);
 
-        var payload = new
-        {
-          filename = filename,
-          prompt = fullPrompt
-        };
-        string json = JsonSerializer.Serialize(payload);
-        string output = "";
-        using (Process process = Process.Start(start))
-        {
-			start.StandardOutputEncoding = Encoding.UTF8;
-			start.StandardErrorEncoding = Encoding.UTF8;
-            // Send JSON to Python
-            await process.StandardInput.WriteAsync(json);
-            process.StandardInput.Close();
+		Console.WriteLine($"Python script: {scriptPath}");
+		Console.WriteLine($"Script exists: {System.IO.File.Exists(scriptPath)}");
 
-            // Read Python output
-            Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
-            Task<string> errorTask = process.StandardError.ReadToEndAsync();
+		// Configure Python process
+		ProcessStartInfo start = new ProcessStartInfo
+		{
+		    FileName = "py.exe",
+		    WorkingDirectory = _webHost.ContentRootPath,
+		    UseShellExecute = false,
+		    RedirectStandardInput = true,
+		    RedirectStandardOutput = true,
+		    RedirectStandardError = true,
+		    StandardOutputEncoding = Encoding.UTF8,
+		    StandardErrorEncoding = Encoding.UTF8,
+		    CreateNoWindow = true
+		};
 
-            await process.WaitForExitAsync();
-            output = await outputTask;
-            string errors = await errorTask;
-            if (!string.IsNullOrWhiteSpace(errors))
-            {
-	            Console.WriteLine(errors);
-            }
-        }
+		start.ArgumentList.Add("-3.12");
+		start.ArgumentList.Add("-u");
+		start.ArgumentList.Add(scriptPath);
 
-       // var response = await _client.Models.GenerateContentAsync(
-        //    model: _options.Model, contents: fullPrompt
-        //);
-        
-       // var output = response.Candidates[0].Content.Parts[0].Text;
-            
-        
+		// Create JSON payload
+		var payload = new
+		{
+		    filename = filename,
+		    prompt = fullPrompt,
+		    model = AIModel
+		};
 
-        // var model = _client.GenerativeModel("gemini-2.5-flash");
-        //
-        // var response = await model.GenerateContent(fullPrompt);
-        
-        //Console.WriteLine(response.Text);
+		string json = JsonSerializer.Serialize(payload);
 
-		Console.WriteLine(output);
-        return output;
+		// Start Python process
+		using var process = new Process { StartInfo = start };
+
+		process.Start();
+
+		Console.WriteLine($"Python process ID: {process.Id}");
+
+		// Start reading output BEFORE writing to stdin
+		Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+		Task<string> errorTask = process.StandardError.ReadToEndAsync();
+
+		Exception? writeError = null;
+
+		try
+		{
+		    await process.StandardInput.WriteAsync(json);
+		}
+		catch (IOException ex)
+		{
+		    writeError = ex;
+		}
+		finally
+		{
+		    // Signal EOF to Python's sys.stdin.read()
+		    try
+		    {
+		        process.StandardInput.Close();
+		    }
+		    catch (IOException)
+		    {
+		        // The pipe may already have closed
+		    }
+		}
+
+		// Wait for Python to finish
+		await process.WaitForExitAsync();
+
+		// Retrieve outputs
+		string output = await outputTask;
+		string errors = await errorTask;
+
+		Console.WriteLine($"Python exit code: {process.ExitCode}");
+		Console.WriteLine($"Python stdout: {output}");
+		Console.WriteLine($"Python stderr: {errors}");
+
+		// Report failures with Python's actual error message
+		if (writeError != null || process.ExitCode != 0)
+		{
+		    throw new InvalidOperationException(
+		        $"Python process failed.\n" +
+		        $"Exit code: {process.ExitCode}\n" +
+		        $"Python stderr:\n{errors}",
+		        writeError
+		    );
+		}
+
+		return output;
         
     }
 
@@ -182,6 +222,12 @@ public class Backend : IBackend
         
         fields.Incorrect = processQuestions(incorrectString).ToList();
 
+		string randomisedCode = FindSubstring(trimmedResponse, "q.Marks = 1;", "q.Stem");
+		
+		fields.VariableString = randomisedCode;
+
+		//Console.WriteLine(string.Join("\n", fields.VariableString));
+
 //		Console.WriteLine(string.Join("\n", fields.Incorrect));
         
         return fields;
@@ -206,21 +252,30 @@ public class Backend : IBackend
             int index = 0;
             
             for (int i = 0; i < textSplit.Length - 1; i++)
-            {
-                if (!string.IsNullOrWhiteSpace(textSplit[i]))
-                {
-					temp[index] = Regex.Replace(textSplit[i], @"//.*", "");
-					if (temp[index][0] == '$'){
-						temp[index] = textSplit[i][2..];
-					}
-					else{
-                    	temp[index] = textSplit[i][1..];
-					} 
-					temp[index] = temp[index].TrimEnd('"', ' ', ',', '\t', '\r');
-					index++;
-				
-                }
-            }
+			{
+    			if (!string.IsNullOrWhiteSpace(textSplit[i]))
+    			{
+        			temp[index] = Regex.Replace(textSplit[i], @"//.*", "");
+					temp[index] = temp[index].TrimStart();
+
+        			if (string.IsNullOrEmpty(temp[index]))
+            			continue;
+
+        			if (temp[index][0] == '$')
+        			{
+            			temp[index] = temp[index].Length >= 2
+                			? temp[index][2..]
+                			: "";
+        			}
+        			else
+        			{
+            			temp[index] = temp[index][1..];
+        			}
+
+        			temp[index] = temp[index].TrimEnd('"', ' ', ',', '\t', '\r');
+       				index++;
+    			}
+			}
 
             return temp;
         }
@@ -271,7 +326,7 @@ public class Backend : IBackend
                 $"\t\t\tq.Id = \"{model.Question.QID}\";\n" +
                 "\n" +
                 "\t\t\tq.Marks = 1;\n" +
-                "\n" +
+                $"{model.Question.VariableString}" +
                 $"\t\t\tq.Stem = \"{model.Question.QStem}\";\n" +
                 "\n" +
                 "\t\t\tq.AddCorrects(\n";
@@ -342,7 +397,7 @@ public class Backend : IBackend
         	);
 		}
         
-		model.Question = await cSharpToJson(await AskAI(prompt, model.File));
+		model.Question = await cSharpToJson(await AskAI(prompt, model.File, model.AIModel));
         
         return model;
 	}

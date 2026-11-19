@@ -16,6 +16,10 @@
             <input type="radio" asp-for="Question.QType" value="Xyz" id="XyzButton" data-original="@(Model.Question.QType == "Xyz" ? "true" : "false")" > Xyz
             <input type="radio" asp-for="Question.QType" value="Truth" id="TruthButton" data-original="@(Model.Question.QType == "Truth" ? "true" : "false")"> Truth
         </div>
+        <h4>Variable Code</h4>
+        <div class="mb-3">
+            <textarea asp-for="Question.VariableString" class="form-control auto-resize" rows="1" placeholder="Variable Code" data-original="@Model.Question.VariableString"></textarea>
+        </div>
         <h4>Stem</h4>
         <div class="mb-3">
             <textarea asp-for="Question.QStem" class="form-control auto-resize" rows="1" placeholder="Question stem" data-original="@Model.Question.QStem"></textarea>

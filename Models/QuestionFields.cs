@@ -8,4 +8,5 @@ public class QuestionFields
     public string QType { get; set; } = "";
     public List<string> Correct { get; set; } = new();
     public List<string> Incorrect { get; set; } = new();
+	public string VariableString { get; set; } = "";
 }
